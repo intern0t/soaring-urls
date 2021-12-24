@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, redirect
+from flask import Flask, request, jsonify, redirect, render_template
 import hashlib
 import time
 from sqlitedict import SqliteDict
@@ -17,7 +17,8 @@ database = SqliteDict("./%s" % CONFIGS["DATABASE_NAME"], autocommit=True)
 def index():
     if request.method == 'GET':
         # Use template engines/custom templates to send a form & handle form submit.
-        return jsonify(error=False, message="OK!"), 200
+        # return jsonify(error=False, message="OK!"), 200
+        return render_template('index.html', title=CONFIGS['SITE_INFO']['title'], description=CONFIGS['SITE_INFO']['description'], deploy_url=CONFIGS['DOMAIN'], year=CONFIGS['SITE_INFO']['year']), 200
     elif request.method == 'POST':
         # Someone used unorthodox method to shorten their URLs.
         long_url = request.form.get('url')
@@ -26,7 +27,7 @@ def index():
                 # URL doesn't exist in the database, add to database.
                 id = generate_id(long_url)
                 database[id] = str(long_url)
-                return jsonify(error=False, id=id, url=long_url, shortened="%s/%s" % (CONFIGS['DOMAIN'], id))
+                return jsonify(error=False, id=id, url=long_url, shortened="%s/%s" % (CONFIGS['DOMAIN'], id)), 200
             else:
                 # URL exists, find & return the key.
                 id = generate_id(long_url)
@@ -39,7 +40,7 @@ def index():
 
 @app.route("/<id>", methods=['GET', 'POST'])
 def navigate(id):
-    if id != None and len(id) == 5:
+    if id != None and len(id) == CONFIGS['ID_LENGTH']:
         if id in database:
             return redirect("%s" % database[id], code=302)
         else:
