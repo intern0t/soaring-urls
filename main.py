@@ -1,10 +1,18 @@
 from flask import Flask, request, jsonify, redirect, render_template
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import hashlib
 import time
 from sqlitedict import SqliteDict
 from config import CONFIGS
 
 app = Flask(__name__)
+
+limiter = Limiter(
+    app,
+    key_func=get_remote_address,
+    default_limits=["100 per hour"]
+)
 
 database = SqliteDict("./%s" % CONFIGS["DATABASE_NAME"], autocommit=True)
 
@@ -13,13 +21,21 @@ database = SqliteDict("./%s" % CONFIGS["DATABASE_NAME"], autocommit=True)
 '''
 
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
+@app.route('/', methods=['GET'])
+@limiter.exempt
+def get_index():
     if request.method == 'GET':
         # Use template engines/custom templates to send a form & handle form submit.
         # return jsonify(error=False, message="OK!"), 200
         return render_template('index.html', title=CONFIGS['SITE_INFO']['title'], description=CONFIGS['SITE_INFO']['description'], deploy_url=CONFIGS['DOMAIN'], year=CONFIGS['SITE_INFO']['year']), 200
-    elif request.method == 'POST':
+    else:
+        return jsonify(error=True, message="Not OK!"), 404
+
+
+@app.route('/', methods=['POST'])
+@limiter.limit("1/second")
+def post_method():
+    if request.method == 'POST':
         # Someone used unorthodox method to shorten their URLs.
         long_url = request.form.get('url')
         if long_url != None and len(long_url) >= 20 and is_valid_url(long_url):
@@ -38,7 +54,8 @@ def index():
         return jsonify(error=True, message="Not OK!"), 404
 
 
-@app.route("/<id>", methods=['GET', 'POST'])
+@app.route("/<id>", methods=['GET'])
+@limiter.exempt
 def navigate(id):
     if id != None and len(id) == CONFIGS['ID_LENGTH']:
         if id in database:
@@ -62,6 +79,7 @@ def get_timestamp():
 def generate_id(url):
     timestamp = md5(url)
     return timestamp[:CONFIGS['ID_LENGTH']]
+
 
 def url_exists(url) -> bool:
     url_id = generate_id(url)
