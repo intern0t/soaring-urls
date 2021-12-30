@@ -5,7 +5,6 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{{ title }}</title>
-        <!-- <link rel="stylesheet" href="storedin.min.css" /> -->
         <style>
             :root {
                 --font: ui-monospace, Menlo, Monaco, 'Cascadia Mono',
@@ -152,19 +151,18 @@
                 border: 0.5px dotted #000000;
                 font-family: var(--font);
             }
-            body .main-container .description form div button[type="submit"] {
+            body .main-container .description form div button {
                 margin: 0 0 0 10px;
                 padding: 5px 10px;
-                font-family: var(--font);
+                font-family: calc(var(--font) - 2px);
                 font-weight: bold;
             }
-            /*# sourceMappingURL=storedin.min.css.map */
         </style>
     </head>
     <body onload="">
         <div class="main-container">
             <section class="main-header">
-                <div class="logo">sURL</div>
+                <div class="logo"><a href="https://github.com/intern0t/soaring-urls">sURL</a></div>
                 <div class="description">
                     A
                     <span class="typewrite-wrapper"
@@ -184,26 +182,25 @@
                 <h2>- Using the <code>form</code> below</h2>
                 <form id="surl_create_form">
                     <div>
-                        <input type="url" name="url" class="input_text" placeholder="Enter the long URL you wish to shorten. Character length > 20."/>
+                        <input type="url" name="url" class="input_text" placeholder="Enter the long URL you wish to shorten. Character length > 20." autofocus/>
                         <button type="submit">Shorten!</button>
+                        <button type="reset">Clear</button>
                     </div>
                 </form>
 
                 <h2>- Using <code>curl</code></h2>
-                <pre><code class="language-shell">curl --data "url=SOME_LONG_URL_HERE" {{ deploy_url }}</code></pre>
+                <pre><code class="language-shell">curl --data "url=LONG_URL" {{ deploy_url }}</code></pre>
 
-                <h2>- Create an <code>alias</code> (Linux | Optional)</h2>
-                <pre><code>echo 'alias sim="curl --data-urlencode data@- https://storedin.herokuapp.com/"' >> ~/.bash_aliases && source ~/.bash_aliases</code></pre>
-                <pre><code>cat somefile.ext | sim</code></pre>
+                <h2>- Piping content to <code>curl</code></h2>
+                <pre><code class="language-shell">echo "LONG_URL" | curl --data-urlencode url@- {{ deploy_url }}</code></pre>
 
-                <h2>- Prettify (Linux | Optional)</h2>
-                <p>
-                    StoredIn responds with JSON formatted data. You can utilize
-                    a package called <code>jq</code> to prettify the JSON
-                    response. You can pipe the output to <code>jq</code> by
-                    appending <code>| jq</code> to the commands above.
-                </p>
-                <pre><code>cat somefile.ext | curl --data-urlencode data@- https://storedin.herokuapp.com/ | jq</code></pre>
+                <h2>- Create an <code>alias</code></h2>
+                <ul>
+                    <li>
+                        <pre><code class="language-shell">alias surl="curl --data-urlencode url@- https://surl.prashant.me"</code></pre>
+                    </li>
+                    <li><pre><code class="language-shell">echo "LONG_URL" | surl</code></pre></li>
+                </ul>
             </section>
 
             <!-- FEATURES -->
@@ -211,10 +208,12 @@
                 <h1>Features</h1>
                 <ul>
                     <li>
-                        Accepts POST requests with 'data' as the field. (works
+                        Accepts POST requests with 'url' as the field. (works
                         with any systems without having to install any special
                         tools).
                     </li>
+                    <li>Fast read operation <i>(link translation)</i>.</li>
+                    <li>Simple web form provided to communicate with the backend.</li>
                 </ul>
             </section>
 
@@ -223,10 +222,6 @@
                 <h1>Restriction(s)</h1>
                 <ul>
                     <li>No illegal contents.</li>
-                    <li>
-                        File upload is NOT allowed. Raw contents however, is
-                        allowed.
-                    </li>
                 </ul>
             </section>
 
@@ -234,13 +229,7 @@
             <section class="description">
                 <h1>Retention</h1>
                 <p>
-                    I will wipe ALL the paste files if I need more storage or
-                    make spots for my paste. Please do not expect the paste you
-                    store to have infinite retention. For now, I'm allocating
-                    around 100GB per server = ~((1024 * 100)Mb/~3Mb limit/paste)
-                    =
-                    <strong>~34 133.333 33 total paste files per server</strong
-                    >.
+                    The links will be retained until I need more space in my server.
                 </p>
             </section>
 
@@ -249,7 +238,7 @@
                 <h1>Changelog</h1>
                 <ul>
                     <li>
-                        <strong>Tue 21 Dec 2021:</strong> Temporarily deployed to Heroku, fixing servers.
+                        <strong>Dec 30, 2021:</strong> Deployed at home server.
                     </li>
                 </ul>
             </section>
@@ -266,7 +255,8 @@
         </div>
 
         <script type="text/javascript">
-            var form = document.getElementById("surl_create_form");
+            const form = document.getElementById("surl_create_form");
+            const url_input = document.getElementsByClassName("input_text")[0];
 
             const createHandle = e => {
                 e.preventDefault();
@@ -285,21 +275,44 @@
                     var req = new XMLHttpRequest();
                     req.onreadystatechange = () => {
                         if(req.readyState == 4 && req.status == 200) {
-                            console.log(req.responseText);
+                            if(req.responseText) {
+                                const resp = JSON.parse(req.responseText);
+                                if(resp && resp.error != true && resp.shortened) {
+                                    // Add the shortened URL to the input.
+                                    url_input.value = resp.shortened;
+                                    console.log(resp);
+                                }else {
+                                    alert("Response yielded error.");
+                                }
+                            }else {
+                                alert("Response differed from what was expected.");
+                            }
                         }else{
                             console.log("Other than 200 status.");
                         }
                     }
-
+                    
                     req.open("POST", "/");
                     req.send(payload);
                 }else {
-                    alert("Short URL, why?!");
+                    alert("URL does not meet certain criterias. Must be a URL, length must be greater than or equal to 20 characters. Try again.");
                 }
                 return false;
             }
 
+            const inputClickHandle = e => {
+                // REF: https://developer.mozilla.org/en-US/docs/Web/API/HTMLInputElement/select
+                if(e.target && e.target.value) {
+                    // We have text, doesn't matter what kind of text. Focus & select for ease of copy.
+                    e.target.focus();
+                    e.target.select();
+                }else {
+                    return false;
+                }
+            };
+
             form.addEventListener('submit', createHandle);
+            url_input.addEventListener('click', inputClickHandle);
         </script>
     </body>
 </html>

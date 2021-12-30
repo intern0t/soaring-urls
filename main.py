@@ -31,7 +31,7 @@ def index():
             else:
                 # URL exists, find & return the key.
                 id = generate_id(long_url)
-                return jsonify(error=True, message="URL exists.", id=id, url=long_url, shortened="%s/%s" % (CONFIGS['DOMAIN'], id))
+                return jsonify(error=False, message="URL exists.", id=id, url=long_url, shortened="%s/%s" % (CONFIGS['DOMAIN'], id))
         else:
             return jsonify(error=True, message="The url parameter must be provided, more than 20 characters long, and a valid URL.", url_length="Unknown" if long_url == None else len(long_url), valid_url=is_valid_url(long_url), url=long_url)
     else:
@@ -62,12 +62,6 @@ def get_timestamp():
 def generate_id(url):
     timestamp = md5(url)
     return timestamp[:CONFIGS['ID_LENGTH']]
-
-
-"""
-Check 
-"""
-
 
 def url_exists(url) -> bool:
     url_id = generate_id(url)
