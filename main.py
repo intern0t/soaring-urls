@@ -55,7 +55,7 @@ def post_method():
 
 
 @app.route("/<id>", methods=['GET'])
-@limiter.exempt
+@limiter.limit("1/second")
 def navigate(id):
     if id != None and len(id) == CONFIGS['ID_LENGTH']:
         if id in database:

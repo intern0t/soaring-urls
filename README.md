@@ -20,6 +20,14 @@ There are two main routes at the time of development, main page and the URL tran
 2. URL Translation
    - `/<ID>` - `GET` requires shortened ID generated from the `/`'s `POST` method. It checks the passed `<ID>` against the database and returns a temporary redirect to the translated URL.
 
+### Limitations
+
+Rate limitation has been put in place to avoid spams and irregular requests, using a nifty Python library called `Flask-Limiter`.
+
+1. `/` - `GET` - No limitations are put in place for this route and method.
+2. `/` - `POST` - 1 request per second.
+3. `/<ID>` - `GET` - 1 request per second. *(I've Been receiving high amount of irregular requests in this route)*
+
 ## Attributions
 
 1. [Python](https://www.python.org/)
