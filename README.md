@@ -4,11 +4,18 @@ A simple URL Shortner, easy to deploy and use, developed using `Python`, `Flask`
 
 ## Deploy your own instance
 
+#### Recommended: Deploy using Docker
+The Flask application is set to run in port `5000` by default, I have set port `2000` to route to `5000` in `docker-compose.yaml` file.
+
+Simply running the command, `docker compose up --build -d` from within the repository root.
+
+#### Not recommended
 Deployment is easy as this project relies in three (3) python libraries. Ensure python is installed `v2` or `v3` does not matter in our case.
 
 Head to the project's root and install the necessary libraries using `pip install -r requirements.txt`.
 
 Once all libraries are installed, simply run it with `FLASK_APP=main.py FLASK_ENV=production flask run` for production purposes or `FLASK_APP=main.py FLASK_ENV=development flask run` for development purposes.
+
 
 ## Routes
 
