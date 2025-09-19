@@ -9,9 +9,10 @@ from config import CONFIGS
 app = Flask(__name__)
 
 limiter = Limiter(
-    app,
-    key_func=get_remote_address,
-    default_limits=["100 per hour"]
+    get_remote_address,
+    app=app,
+    default_limits=["100 per hour"],
+    storage_uri="memory://",
 )
 
 database = SqliteDict("./%s" % CONFIGS["DATABASE_NAME"], autocommit=True)

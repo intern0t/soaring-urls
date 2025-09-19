@@ -1,0 +1,11 @@
+version: "1.0"
+
+services:
+  web:
+    build: .
+    container_name: soaring_url
+    ports:
+      - 2000:5000
+    volumes:
+      - .:/app
+    restart: always
